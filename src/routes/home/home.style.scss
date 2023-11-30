@@ -1,0 +1,38 @@
+.home-container {
+  display: flex;
+  background-color: rgb(37, 36, 36);
+}
+
+.images {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+}
+
+.fashion {
+  width: 55%;
+  height: 85vh;
+}
+.watch {
+  width: 55%;
+  height: 85vh;
+}
+
+.words {
+  width: 13rem;
+  position: absolute;
+  margin: 15rem 40rem;
+  color: whitesmoke;
+  font-size: large;
+  font-weight: 700;
+  font-family: "Ephesis", cursive;
+  line-height: 2rem;
+}
+
+.link {
+  padding: 0.1rem 0.3rem;
+  border-radius: 5px;
+  background-color: whitesmoke;
+  color: black;
+}
