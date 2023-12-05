@@ -1,6 +1,6 @@
 import "./checkout-item.styles.scss";
 
-// import { useCartGlobalContext } from "../../context/cart.context";
+import { useCartGlobalContext } from "../../context/cart.context";
 
 const CheckoutItem = ({ cartItem }) => {
   const { imageUrl, name, price, quantity } = cartItem;

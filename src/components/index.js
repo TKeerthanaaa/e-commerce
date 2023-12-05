@@ -9,6 +9,7 @@ import CartDropdown from "./cart-dropdown/cart-dropdown.component";
 import CheckoutItem from "./checkout-item/checkout-item.component";
 import CategoryPreview from "./category-preview/category-preview.component";
 
+
 export {
   Directory,
   Navbar,

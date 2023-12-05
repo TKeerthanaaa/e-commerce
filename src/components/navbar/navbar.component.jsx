@@ -1,15 +1,16 @@
 import { RiShoppingBagLine } from "react-icons/ri";
-import { FaRegUserCircle } from "react-icons/fa";
-import { useCartGlobalContext } from "../../context/cart.Context";
+import { Link } from "react-router-dom";
+
+import { signOutUser } from "../../utiles/firebase/index";
+import { useUserGlobalContext } from "../../context/user.context";
+import { useCartGlobalContext } from "../../context/cart.context";
 
 import CartIcon from "../cart-icon/cart-icon.component";
 import CartDropdown from "../cart-dropdown/cart-dropdown.component";
 
 const Navbar = () => {
-  const { currentUser } = useCartGlobalContext();
-
+  const { currentUser } = useUserGlobalContext();
   const { isCartOpen } = useCartGlobalContext();
-  const cartDropdownHandler = () => setIsCartOpen(!isCartOpen);
 
   const signOutHandler = async () => {
     await signOutUser();
@@ -28,24 +29,28 @@ const Navbar = () => {
         </div>
         <ul className="flex items-center">
           <li className="font-semibold text-lg">
-            <a href="/">Home</a>
+            <Link to="/">Home</Link>
           </li>
           <li className="font-semibold text-lg">
-            <a href="/shop">Shop</a>
+            <Link to="/shop">Shop</Link>
           </li>
           <li className="font-semibold text-lg">
             <a href="/checkout">
               <RiShoppingBagLine />
             </a>
           </li>
+          {currentUser ? (
+            <li className="nav-item">
+              <span className="nav-link" onClick={signOutHandler}>
+                SignOut
+              </span>
+            </li>
+          ) : (
+            <li className="nav-item">
+              <Link to="/auth">SignIn</Link>
+            </li>
+          )}
         </ul>
-        <div className="font-medium text-xl">
-          <button className="log">
-            <a href="/auth">
-              <FaRegUserCircle />
-            </a>
-          </button>
-        </div>
       </div>
       {isCartOpen && <CartDropdown />}
     </nav>
