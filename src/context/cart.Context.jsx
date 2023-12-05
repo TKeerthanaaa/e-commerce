@@ -1,63 +1,112 @@
-import { createContext, useState, useContext, useEffect } from "react";
-import {
-  signInWithGooglePopup,
-  createUserDocFromAuth,
-  onAuthStateChangeListener,
-  getUserDataFromCollection,
-  signOutUser,
-} from "../utils/firebase/index";
+import { createContext, useContext, useEffect, useState } from "react";
 
-// create the context
-const UserContext = createContext();
+const addCartItem = (cartItems, cartItemToAdd) => {
+  //find whether the cartItem is already exist or not
+  const existingCartItem = cartItems.find(
+    (cartItem) => cartItem.id === cartItemToAdd.id
+  );
 
-// create the context provider
-const UserContextProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-
-  const googleHandler = async () => {
-    const { user } = await signInWithGooglePopup();
-    const userDocRef = await createUserDocFromAuth(user);
-    setUser(user);
-  };
-
-  const logoutHandler = () => {
-    // Reset the user state to null
-    setUser(null);
-    signOutUser();
-  };
-
-  useEffect(() => {
-    // adding listener function
-    const unSubscribe = onAuthStateChangeListener(async (user) => {
-      setUser(user);
-      console.log(user);
-      if (user) {
-        createUserDocFromAuth(user);
-        const userData = await getUserDataFromCollection(user);
-        setUser((prevUser) => ({ ...prevUser, ...userData })); // Update user with additional data
+  //if existingCartItem is valid ({})
+  if (existingCartItem) {
+    return cartItems.map((cartItem) => {
+      if (cartItem.id === cartItemToAdd.id) {
+        return { ...cartItem, quantity: cartItem.quantity + 1 };
+      } else {
+        return cartItem;
       }
     });
+  } else {
+    return [...cartItems, { ...cartItemToAdd, quantity: 1 }];
 
-    return unSubscribe;
-  }, []);
+    // return cartItems.push({...cartItemToAdd, quantity:1})
+  }
+};
 
-  //   assign the values
-  const values = {
-    user,
-    googleHandler,
-    logoutHandler,
+const removeCartItem = (cartItems, cartItemToRemove) => {
+  //find whether the cartItem is already exist or not
+  const existingCartItem = cartItems.find(
+    (cartItem) => cartItem.id === cartItemToRemove.id
+  );
+
+  //check whether existing cartItem quantity ===1
+  if (existingCartItem.quantity === 1) {
+    return cartItems.filter((cartItem) => cartItem.id !== cartItemToRemove.id);
+  } else {
+    return cartItems.map((cartItem) =>
+      cartItem.id === cartItemToRemove.id
+        ? { ...cartItem, quantity: cartItem.quantity - 1 }
+        : cartItem
+    );
+  }
+};
+
+//clear cart Item function
+const clearCartItem = (cartItems, cartItemToClear) => {
+  return cartItems.filter((cartItem) => cartItem.id !== cartItemToClear.id);
+};
+
+const CartContext = createContext({
+  isCartOpen: false,
+  setIsCartOpen: () => {},
+  cartItems: [],
+  setCartItems: () => {},
+  cartCount: 0,
+  setCartCount: () => {},
+  cartTotal: 0,
+  setCartTotal: () => {},
+});
+
+const CartProvider = ({ children }) => {
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [cartCount, setCartCount] = useState(0);
+  const [cartTotal, setCartTotal] = useState(0);
+
+  useEffect(() => {
+    const newCartCount = cartItems.reduce((prev, curr) => {
+      return prev + curr.quantity;
+    }, 0);
+    setCartCount(newCartCount);
+  }, [cartItems]);
+
+  useEffect(() => {
+    const newCartTotal = cartItems.reduce((prev, curr) => {
+      return prev + curr.quantity * curr.price;
+    }, 0);
+    setCartTotal(newCartTotal);
+  }, [cartItems]);
+
+  const addItemToCart = (cartItemToAdd) => {
+    setCartItems(addCartItem(cartItems, cartItemToAdd));
   };
 
-  return (
-    // pass the values
-    <UserContext.Provider value={values}>{children}</UserContext.Provider>
-  );
+  const removeItemFromCart = (cartItemToRemove) => {
+    setCartItems(removeCartItem(cartItems, cartItemToRemove));
+  };
+
+  const clearItemFromCart = (cartItemToClear) => {
+    setCartItems(clearCartItem(cartItems, cartItemToClear));
+  };
+
+  const value = {
+    isCartOpen,
+    setIsCartOpen,
+    cartItems,
+    setCartItems,
+    cartCount,
+    setCartCount,
+    cartTotal,
+    setCartTotal,
+    addItemToCart,
+    removeItemFromCart,
+    clearItemFromCart,
+  };
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
-// custom hooks
-const useUserContext = () => {
-  // note: custom hook is a function so we need to return the useContext
-  return useContext(UserContext);
+const useCartGlobalContext = () => {
+  return useContext(CartContext);
 };
 
-export { UserContextProvider, useUserContext };
+export { CartContext, CartProvider, useCartGlobalContext };

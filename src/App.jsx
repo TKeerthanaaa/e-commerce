@@ -2,7 +2,14 @@ import { Navbar } from "./components";
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import { Root, Home, Shop, Cart, Authentication, ErrorPage } from "./routes";
+import {
+  Root,
+  Home,
+  Shop,
+  Checkout,
+  Authentication,
+  ErrorPage,
+} from "./routes";
 
 const router = createBrowserRouter([
   {
@@ -15,11 +22,11 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "cart",
-        element: <Cart />,
+        path: "checkout",
+        element: <Checkout />,
       },
       {
-        path: "shop",
+        path: "shop/*",
         element: <Shop />,
       },
       { path: "auth", element: <Authentication /> },

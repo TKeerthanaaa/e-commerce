@@ -1,10 +1,8 @@
 import Root from "./root/root.routes";
-
 import Home from "./home/home.route";
 import Shop from "./shop/shop.route";
-import Cart from "./cart/cart.route";
+import Checkout from "./checkout/checkout.route";
 import Authentication from "./authentication/authentication.route";
-
 import ErrorPage from "./error/error-page";
 
-export { Root, Home, Shop, Cart, Authentication, ErrorPage };
+export { Root, Home, Shop, Checkout, Authentication, ErrorPage };

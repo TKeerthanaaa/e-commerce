@@ -1,6 +1,20 @@
-import { BsCart4 } from "react-icons/bs";
+import { RiShoppingBagLine } from "react-icons/ri";
 import { FaRegUserCircle } from "react-icons/fa";
+import { useCartGlobalContext } from "../../context/cart.Context";
+
+import CartIcon from "../cart-icon/cart-icon.component";
+import CartDropdown from "../cart-dropdown/cart-dropdown.component";
+
 const Navbar = () => {
+  const { currentUser } = useCartGlobalContext();
+
+  const { isCartOpen } = useCartGlobalContext();
+  const cartDropdownHandler = () => setIsCartOpen(!isCartOpen);
+
+  const signOutHandler = async () => {
+    await signOutUser();
+  };
+
   return (
     <nav className="w-full px-4 shadow">
       <div className="container h-[6rem] flex item-center justify-between">
@@ -12,7 +26,7 @@ const Navbar = () => {
           />
           <span>Trendy Max</span>
         </div>
-        <ul className="flex gap-12 items-center">
+        <ul className="flex items-center">
           <li className="font-semibold text-lg">
             <a href="/">Home</a>
           </li>
@@ -20,10 +34,12 @@ const Navbar = () => {
             <a href="/shop">Shop</a>
           </li>
           <li className="font-semibold text-lg">
-            <a href="/cart">Cart</a>
+            <a href="/checkout">
+              <RiShoppingBagLine />
+            </a>
           </li>
         </ul>
-        <div className="flex gap-[2rem] font-medium text-xl">
+        <div className="font-medium text-xl">
           <button className="log">
             <a href="/auth">
               <FaRegUserCircle />
@@ -31,6 +47,7 @@ const Navbar = () => {
           </button>
         </div>
       </div>
+      {isCartOpen && <CartDropdown />}
     </nav>
   );
 };

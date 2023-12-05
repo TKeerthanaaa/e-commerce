@@ -5,6 +5,12 @@ import FormInput from "../form-input/form-input.component";
 import Button from "../button/button.component";
 
 import "./sign-in-form.styles.scss";
+import {
+  signInWithGooglePopup,
+  createUserDocumentFromAuth,
+  signInAuthUserWithEmailAndPassword,
+} from "../../utiles/firebase/index.js";
+// import { useUser } from "../../context/user.context.jsx";
 
 const defaultFormFields = {
   email: "",
@@ -14,11 +20,38 @@ const defaultFormFields = {
 const SingInForm = () => {
   const [formFields, setFormFields] = useState(defaultFormFields);
   const { email, password } = formFields;
+  // const { setUser } = useUser();
 
-  const signInWithGoogle = async () => {};
+  const signInWithGoogle = async () => {
+    const { user } = await signInWithGooglePopup();
+    const userDocRef = await createUserDocumentFromAuth(user);
+    setUser(user.email, user.displayName);
+  };
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    // console.log("hit");
+    if (email && password) {
+      try {
+        const { user } = await signInAuthUserWithEmailAndPassword(
+          email,
+          password
+        );
+        console.log({ user });
+        setFormFields({ email: "", password: "", confirmPassword: "" });
+        if (user) {
+          setUser(user.email, user.displayName);
+
+          console.log(user.email);
+        }
+      } catch (err) {
+        // console.log("Error Occurd while Login", err.message);
+        // console.log(err.code);
+        if (err.code === "auth/invalid-credential") {
+          alert("Invalid Credentials");
+        }
+      }
+    }
   };
 
   const changeHandler = (e) => {

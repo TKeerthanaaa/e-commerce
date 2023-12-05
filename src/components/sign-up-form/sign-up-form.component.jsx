@@ -5,6 +5,10 @@ import FormInput from "../form-input/form-input.component";
 import Button from "../button/button.component";
 
 import "./sign-up-form.styles.scss";
+import {
+  createAuthUserWithEmailAndPassword,
+  createUserDocumentFromAuth,
+} from "../../utiles/firebase/index.js";
 
 const defaultFormFields = {
   displayName: "",
@@ -22,6 +26,22 @@ const SignUpForm = () => {
     if (password !== confirmPassword) {
       alert("Passwords do not match");
       return;
+    }
+    try {
+      const { user } = await createAuthUserWithEmailAndPassword(
+        email,
+        password
+      );
+      const userDocRef = await createUserDocumentFromAuth(user, {
+        displayName,
+      });
+      setFormFields(formFields);
+    } catch (err) {
+      console.log("Something Happened", err.message);
+      console.log(err.code);
+      if (err.code === "auth/email-already-in-use") {
+        alert("Email Already Exists Please use alternate Email");
+      }
     }
   };
 

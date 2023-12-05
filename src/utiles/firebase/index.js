@@ -1,32 +1,23 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
 import {
+  GoogleAuthProvider,
   getAuth,
   signInWithPopup,
-  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-
-// *****Note:**** //
-// 1. getAuth is for authenticating the app for google firebase
-// 2. signInWithPopup is sign in with a popup
-// 3. GoogleAuthProvider will provide the googleAuth function for App
-// 4. createUserWithEmailAndPassword register your account
-// 5. signInWithEmailAndPassword login with registered account
-// 6. onAuthStateChanged backTrack the user which user is logged in or out
-// 7. sign out the user
-
-// fire store database
-import { getFirestore } from "firebase/firestore";
-
-// To create or overwrite a single document
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  writeBatch,
+  query,
+  getDocs,
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA-NBeW3iAGnQF1iQeabI5PADOa_0LgDss",
@@ -39,50 +30,54 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const commerceApp = initializeApp(firebaseConfig);
 
-const auth = getAuth(app);
+//<-----Authentication------>//
+const commerceAuth = getAuth(commerceApp);
 
-// clone the googleAuthProvider
-const provider = new GoogleAuthProvider();
+//activate provider
+const commerceGoogleProvider = new GoogleAuthProvider();
 
-// signIn method accepts two arguments that initialized app and google provider
-const signInWithGooglePopup = () => signInWithPopup(auth, provider);
+//create a authentication method function
+const signInWithGooglePopup = () =>
+  signInWithPopup(commerceAuth, commerceGoogleProvider);
 
-// create user with email and password
-const createUserForGoogle = async (email, password) => {
-  if (!email && !password) return;
-  return createUserWithEmailAndPassword(auth, email, password);
+//create a method function for userCreation using email and password
+const createAuthUserWithEmailAndPassword = async (email, password) => {
+  if (!email || !password) return;
+  return createUserWithEmailAndPassword(commerceAuth, email, password);
 };
 
-// sign in with registered account
-const signInAuthForGoogle = async (email, password) => {
-  if (!email && !password) return;
-  return signInWithEmailAndPassword(auth, email, password);
+//create a method function for signInWithEmail and Password
+const signInAuthUserWithEmailAndPassword = async (email, password) => {
+  if (!email || !password) return;
+  return signInWithEmailAndPassword(commerceAuth, email, password);
 };
 
-// sign out the user
-const signOutUser = () => {
-  return signOut(auth);
-};
+//create a method for signOut
+const signOutUser = () => signOut(commerceAuth);
 
-// tracker the login logout details
-const onAuthStateChangeListener = (callback) => {
-  onAuthStateChanged(auth, callback);
-};
+//create a method of onAuthStateChange
+const onAuthStateChangedListener = (callback) =>
+  onAuthStateChanged(commerceAuth, callback);
 
-// Initialize Cloud Firestore and get a reference to the service
-const db = getFirestore(app);
+//<-----Firestore------>//
+const commerceDb = getFirestore(commerceApp);
 
-const createUserDocFromAuth = async (userAuth, additionalInfo = {}) => {
+//create user document
+const createUserDocumentFromAuth = async (
+  userAuth,
+  additionInformation = {}
+) => {
   if (!userAuth) return;
-  // // check once your values are returning
-  // console.log("user Name:", userAuth.displayName);
-  // console.log("user email:", userAuth.email);
-  // console.log("user photo:", userAuth.photoURL);
 
-  const userDocRef = doc(db, "user", userAuth.uid);
+  const userDocRef = doc(commerceDb, "users", userAuth.uid);
+  // console.log(userDocRef);
+
   const userSnapShot = await getDoc(userDocRef);
+
+  // console.log(userSnapShot);
+  // console.log(userSnapShot.exists());
 
   if (!userSnapShot.exists()) {
     const { displayName, email } = userAuth;
@@ -93,46 +88,58 @@ const createUserDocFromAuth = async (userAuth, additionalInfo = {}) => {
         displayName,
         email,
         createdAt,
-        ...additionalInfo,
+        ...additionInformation,
       });
-
-      const userData = {
-        uid: userAuth.uid,
-        displayName,
-        email,
-        createdAt,
-        ...additionalInfo,
-      };
-      localStorage.setItem("userData", JSON.stringify(userData));
-      // console.log('User data stored in localStorage:', userData);
-    } catch (err) {
-      console.log("Something went wrong!", err.message);
+    } catch (error) {
+      console.log(`Error creating the user`, error.message);
     }
   }
 
   return userDocRef;
 };
 
-const getUserDataFromCollection = async (userAuth) => {
-  const docRef = doc(db, "user", userAuth.uid);
-  const docSnap = await getDoc(docRef);
+//create method for add collection and Documents from local to firebase
+const addCollectionAndDocuments = async (
+  collectionKey,
+  objectsToAdd,
+  field = "title"
+) => {
+  const collectionRef = collection(commerceDb, collectionKey);
+  const batch = writeBatch(commerceDb);
 
-  if (docSnap.exists()) {
-    // console.log("Document data:", docSnap.data());
-    return docSnap.data();
-  } else {
-    // docSnap.data() will be undefined in this case
-    console.log("No such document!");
-    return null;
-  }
+  objectsToAdd.forEach((object) => {
+    const docRef = doc(collectionRef, object[field].toLowerCase());
+    batch.set(docRef, object);
+  });
+
+  await batch.commit();
 };
 
+//create method for getting data from firestore
+const getCategoriesAndDocuments = async () => {
+  const collectionRef = collection(commerceDb, "categories");
+  const q = query(collectionRef);
+
+  const querySnapShot = await getDocs(q);
+
+  const categoryMap = querySnapShot.docs.reduce((acc, docsSnapShot) => {
+    const { title, items } = docsSnapShot.data();
+    acc[title.toLowerCase()] = items;
+    return acc;
+  }, {});
+
+  return categoryMap;
+};
+//<-----Exporting------>//
 export {
+  commerceAuth,
   signInWithGooglePopup,
-  createUserDocFromAuth,
-  createUserForGoogle,
-  signInAuthForGoogle,
-  onAuthStateChangeListener,
+  commerceDb,
+  createUserDocumentFromAuth,
+  createAuthUserWithEmailAndPassword,
+  signInAuthUserWithEmailAndPassword,
   signOutUser,
-  getUserDataFromCollection,
+  onAuthStateChangedListener,
+  addCollectionAndDocuments,
+  getCategoriesAndDocuments,
 };
